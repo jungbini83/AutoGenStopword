@@ -126,11 +126,11 @@ def calcPerplexity(evalNum, tryNum):
         
         OUTPUT_FILE.write(str(perplexity) + '\n')
         
-    OUTPUT_FILE.write(str(sumOfPerplexity/SAMPLE_NUM) + '\n')  
+    OUTPUT_FILE.write(str(sumOfPerplexity/SAMPLE_NUM) + '\n')
+    
+    return sumOfPerplexity/SAMPLE_NUM
             
 def calcTopicCoherence():
-    
-    #STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra.txt', 'a')
    
     row, col = TOPIC_NUMBER, TOPIC_NUMBER
     PMIMatrix = [[0 for x in range(col)] for y in range(row)]
@@ -192,15 +192,18 @@ if __name__ == "__main__":
     SAMPLE_NUM  = 10    
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-    for evalNum in range(3, 31):
+    for evalNum in range(6, 31):
             
+        PerplexityResult = list()
+        PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/AvgPerplexity(' + str(evalNum) + ').txt', 'w')
+        
         STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w') 
              
         randomSelTestfile()
         makeTestFileBoW()
         makeTrainFileBoW('Standard', evalNum)
         runTM()
-        calcPerplexity(evalNum, 0)
+        PerplexityResult.append(str(calcPerplexity(evalNum, 0)))
         
         for tryIdx in range(1,31):
             
@@ -216,4 +219,6 @@ if __name__ == "__main__":
             makeTrainFileBoW('AutoGen', evalNum)
             runTM()
      
-            calcPerplexity(evalNum, tryIdx)                  # �룊洹� perplexity 諛쏄린       
+            PerplexityResult.append(str(calcPerplexity(evalNum, tryIdx)))                  # �룊洹� perplexity 諛쏄린
+            
+        PERPLEXITY_OUTPUT.write('\n'.join(PerplexityResult))       
