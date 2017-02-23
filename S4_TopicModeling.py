@@ -16,21 +16,21 @@ def randomSelTestfile():
     
     os.chdir(CUR_PATH + '/mallet/bin/')  
     
-    for tryIdx in range(1, SAMPLE_NUM+1):                                               # 10번 sample 파일을 랜덤으로 추출
+    for tryIdx in range(1, SAMPLE_NUM+1):                                               # 10踰� sample �뙆�씪�쓣 �옖�뜡�쑝濡� 異붿텧
         
         SAMPLE_DOC_PATH = CUR_PATH + '/sampleDoc/Sample' + str(tryIdx)
         
         if os.path.exists(SAMPLE_DOC_PATH):
-            shutil.rmtree(SAMPLE_DOC_PATH)                                              # 먼저 기존 샘플파일 지우기
+            shutil.rmtree(SAMPLE_DOC_PATH)                                              # 癒쇱� 湲곗〈 �깦�뵆�뙆�씪 吏��슦湲�
         if not os.path.exists(SAMPLE_DOC_PATH):
             os.makedirs(SAMPLE_DOC_PATH)
             
-        # Test 파일 리스트에서 파일을 랜덤으로 추출
+        # Test �뙆�씪 由ъ뒪�듃�뿉�꽌 �뙆�씪�쓣 �옖�뜡�쑝濡� 異붿텧
         testFileList = list()
         for path, dir, files in os.walk(TRAIN_NLP_PATH):
             testFileList.extend([path + '/' + fileName for fileName in files])
         
-        sampleDoc = random.sample(testFileList, 2000)                               # 전체 문서의 20%를 선택
+        sampleDoc = random.sample(testFileList, 2000)                               # �쟾泥� 臾몄꽌�쓽 20%瑜� �꽑�깮
             
         fileIdx = 1
         for filePath in sampleDoc:
@@ -48,7 +48,7 @@ def makeTestFileBoW():
         
         SAMPLE_DOC_PATH = CUR_PATH + '/sampleDoc/Sample' + str(tryIdx)
                 
-        print '프로그램 별 Test용 Basket of Words 만들기'
+        print '�봽濡쒓렇�옩 蹂� Test�슜 Basket of Words 留뚮뱾湲�'
         #cmd_result = os.system('mallet import-dir --input ' + SAMPLE_DOC_PATH + ' --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/test_corpus(' + str(tryIdx) + ').mallet')
         cmd_result = os.system('mallet import-dir --input ' + SAMPLE_DOC_PATH + ' --keep-sequence --output ' + TM_OUTPUT_PATH + '/test_corpus(' + str(tryIdx) + ').mallet')
         if not cmd_result == 0:
@@ -56,26 +56,29 @@ def makeTestFileBoW():
             
     os.chdir('..')
 
-def makeTrainFileBoW():
+def makeTrainFileBoW(type, evalNum):
     
     os.chdir(CUR_PATH + '/mallet/bin/')
     
-    # Train용 corpus 만들기
-    print 'Train용 Basket of Words 만들기'
-    #cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
-    #cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
-    cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+    # Train�슜 corpus 留뚮뱾湲�
+    print 'Train�슜 Basket of Words 留뚮뱾湲�'
+    
+    if type == 'Standard':
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+    elif type == 'AutoGen':
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+#     cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     if not cmd_result == 0:
         print 'Error..\n'
             
     os.chdir('..')
     
-# Topic Modeling 돌리기
+# Topic Modeling �룎由ш린
 def runTM():
     
     os.chdir(CUR_PATH + '/mallet/bin')  
     
-    # 1. Train File 모델링
+    # 1. Train File 紐⑤뜽留�
     cmd_result = os.system('mallet train-topics --input ' + TM_OUTPUT_PATH + 'train_corpus.mallet --num-topics ' + str(TOPIC_NUMBER) +
                              ' --evaluator-filename ' + TM_OUTPUT_PATH + 'evaluator' 
                              ' --output-topic-keys ' + TM_OUTPUT_PATH + 'AssociatedWords(' + str(TOPIC_NUMBER) + ').csv' + 
@@ -84,10 +87,10 @@ def runTM():
                              ' --num-threads 16')
       
     if not cmd_result == 0:
-        print 'Train topic model 에러 발생\n'
+        print 'Train topic model �뿉�윭 諛쒖깮\n'
         exit()
     
-    # 2. 샘플 Test File 모델링
+    # 2. �깦�뵆 Test File 紐⑤뜽留�
     for tryIdx in range(1, SAMPLE_NUM+1):
                 
         cmd_result = os.system('mallet evaluate-topics --evaluator ' + TM_OUTPUT_PATH + 'evaluator' 
@@ -95,21 +98,21 @@ def runTM():
                                ' --output-doc-probs ' + TM_OUTPUT_PATH + 'docprobs(' + str(tryIdx) + ').txt')
         
         if not cmd_result == 0:
-            print 'Test topic model 에러 발생\n'
+            print 'Test topic model �뿉�윭 諛쒖깮\n'
             exit()
                    
-        # Document length 구하기
+        # Document length 援ы븯湲�
         cmd_result = os.system('mallet run cc.mallet.util.DocumentLengths' +
                                ' --input ' + TM_OUTPUT_PATH + 'test_corpus(' + str(tryIdx) + ').mallet' +
                                ' > ' + TM_OUTPUT_PATH + 'doclengths(' + str(tryIdx) +').txt')
         
     os.chdir('../..')
     
-def calcPerplexity(tryNum): 
+def calcPerplexity(evalNum, tryNum): 
     
-    OUTPUT_FILE = open(TM_OUTPUT_PATH + 'perplexity(' + str(tryNum) + ').txt', 'w')
+    OUTPUT_FILE = open(TM_OUTPUT_PATH + 'perplexity(' + str(evalNum) + '-' + str(tryNum) + ').txt', 'w')
         
-    # 샘플 test file의 Perplexity 계산
+    # �깦�뵆 test file�쓽 Perplexity 怨꾩궛
     sumOfPerplexity = 0
     for tryIdx in range(1, SAMPLE_NUM+1):
     
@@ -119,7 +122,7 @@ def calcPerplexity(tryNum):
         sumOfLL     = sum(logLikelihood)
         sumOfDocLen = sum(docLength)
         perplexity  = math.exp(-sumOfLL / sumOfDocLen)
-        sumOfPerplexity += perplexity                                       # 평균을 내기 위해 합산
+        sumOfPerplexity += perplexity                                       # �룊洹좎쓣 �궡湲� �쐞�빐 �빀�궛
         
         OUTPUT_FILE.write(str(perplexity) + '\n')
         
@@ -156,13 +159,11 @@ def calcTopicCoherence():
         minIdx = -1
         minSumPMI = 1000
         for mRow in range(0,len(PMIMatrix)):
-            if minSumPMI > sum(PMIMatrix[mRow]):                    # PMI의 합이 작은 word를 선택해서 지운다.(전체 단어들과 관련성이 가장 작다)
+            if minSumPMI > sum(PMIMatrix[mRow]):                    # PMI�쓽 �빀�씠 �옉�� word瑜� �꽑�깮�빐�꽌 吏��슫�떎.(�쟾泥� �떒�뼱�뱾怨� 愿��젴�꽦�씠 媛��옣 �옉�떎)
                 minIdx = mRow
                 minSumPMI = sum(PMIMatrix[mRow])
         
         stopwordList.append(topicWords[minIdx])
-        #STOPWORD_FILE.write(topicWords[minIdx] + '\n')
-        #STOPWORD_FILE.flush()
         
     return stopwordList
 
@@ -191,29 +192,28 @@ if __name__ == "__main__":
     SAMPLE_NUM  = 10    
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-#     existingStopword = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/TopClass_extra.txt', 'r')]    
-#     STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra.txt', 'w') 
-#     STOPWORD_FILE.write('\n'.join(existingStopword))            # Extra stopword 파일에 쓰기
-#     STOPWORD_FILE.flush()
-#         
-#     randomSelTestfile()
-#     makeTestFileBoW()
-#     makeTrainFileBoW()
-#     runTM()
-#     calcPerplexity(0)
-    
-    for tryIdx in range(21,22):
-#         candidateStopwords = calcTopicCoherence()        
-#         existingStopword = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/TopClass_extra.txt', 'r')]        
-#         existingStopword.append(calcTopicCoherece2(candidateStopwords))    # 토픽별 stopword에서 다시 1개 뽑아서 추가
-#           
-#         STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra.txt', 'w')
-#         STOPWORD_FILE.write('\n'.join(existingStopword))            # Extra stopword 파일에 쓰기
-#         STOPWORD_FILE.flush()
-#         print existingStopword
-           
-#         makeTestFileBoW()                                       # 토픽 모델링 수행
-        makeTrainFileBoW()
+    for evalNum in range(3, 31):
+            
+        STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w') 
+             
+        randomSelTestfile()
+        makeTestFileBoW()
+        makeTrainFileBoW('Standard', evalNum)
         runTM()
-#            
-        calcPerplexity(tryIdx)                  # 평균 perplexity 받기       
+        calcPerplexity(evalNum, 0)
+        
+        for tryIdx in range(1,31):
+            
+            candidateStopwords = calcTopicCoherence()        
+            existingStopword = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'r')]        
+            existingStopword.append(calcTopicCoherece2(candidateStopwords))    # �넗�뵿蹂� stopword�뿉�꽌 �떎�떆 1媛� 戮묒븘�꽌 異붽�
+               
+            STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w')
+            STOPWORD_FILE.write('\n'.join(existingStopword))            # Extra stopword �뙆�씪�뿉 �벐湲�
+            STOPWORD_FILE.flush()
+            print existingStopword
+               
+            makeTrainFileBoW('AutoGen', evalNum)
+            runTM()
+     
+            calcPerplexity(evalNum, tryIdx)                  # �룊洹� perplexity 諛쏄린       
