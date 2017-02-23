@@ -3,6 +3,8 @@ import os, re, string, operator
 from collections import Counter
 from nltk.corpus import stopwords
 from collections import defaultdict
+from nltk import word_tokenize
+from porter2stemmer import Porter2Stemmer
 
 CUR_PATH = os.getcwd()
 INPUT_PATH = CUR_PATH + '/parsedData/'
@@ -22,8 +24,19 @@ regex_str = [r'<[^>]+',
 
 tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
 
-def splitWords(line):    
-    return re.findall('[A-Z]*[a-z]+', line)                
+stemmer = Porter2Stemmer()
+
+def splitWords(WordList):
+    
+    newWordList = []
+    for wordItem in WordList:
+        tmpList1 = re.findall('[A-Z]*[a-z]+', wordItem)                 # �빮�ڷ� �����ϴ� �ռ��� (e.g. Ŭ���� ��)        
+        if tmpList1:
+            newWordList += tmpList1
+        else:
+            newWordList.append(wordItem)
+        
+    return newWordList                 
 
 def writeTermFrequency(counter):
     
@@ -101,25 +114,31 @@ def preprocess_train(PROJECT_LIST):
             
             for filename in files:
                 
-                tokenizedLine = list()
-                for line in open(path + '/' + filename, 'r'):                                        
-                    tokenizedLine.extend([term.lower().translate(None, '0123456789') for term in tokens_re.findall(line) if term not in stopwordList])
-                                
-                if len(tokenizedLine) != 0:
+                # 자연어 전처리 과정
+                doc_raw             = open(path + '/' + filename, 'r').read()                
+                doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+                doc_token           = word_tokenize(doc_letters_only)
+                doc_split_word      = splitWords(doc_token)
+                doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
+                doc_remove_dup      = list(set(doc_stemmed))
+                doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
+                doc_lower           = [w.lower() for w in doc_len_check]
+                                                
+                if len(doc_lower) != 0:
                     
                     total_program_doc_num += 1
                     
                     OUTPUT_FILE = open(OUTPUT_PATH + '/' + filename, 'w')
-                    OUTPUT_FILE.write(' '.join(tokenizedLine))
-                    MERGE_FILE.write(' '.join(tokenizedLine) + '\n')
-                    TRAIN_ALL_FILE.write(' '.join(tokenizedLine) + '\n')                    
+                    OUTPUT_FILE.write(' '.join(doc_lower))
+                    MERGE_FILE.write(' '.join(doc_lower) + '\n')
+                    TRAIN_ALL_FILE.write(' '.join(doc_lower) + '\n')                    
                     OUTPUT_FILE.close()
                     
-                    count_all.update(tokenizedLine)                             # count terms
+                    count_all.update(doc_lower)                             # count terms
                     
-                    for i in range(len(tokenizedLine) - 1):
-                        for j in range(i+1, len(tokenizedLine)):
-                            w1, w2 = sorted([tokenizedLine[i].lower(), tokenizedLine[j].lower()])
+                    for i in range(len(doc_lower) - 1):
+                        for j in range(i+1, len(doc_lower)):
+                            w1, w2 = sorted([doc_lower[i].lower(), doc_lower[j].lower()])
                             if w1 != w2:
                                 co_occur_matrix[w1][w2] += 1
                                 
@@ -150,19 +169,26 @@ def preprocess_test(PROJECT_LIST):
             for filename in files:
                 
                 tokenizedLine = list()
-                for line in open(path + '/' + filename, 'r'):                                        
-                    tokenizedLine.extend([term.lower().translate(None, '0123456789') for term in tokens_re.findall(line) if term not in stopwordList])
+                # 자연어 전처리 과정
+                doc_raw             = open(path + '/' + filename, 'r').read()                
+                doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+                doc_token           = word_tokenize(doc_letters_only)
+                doc_split_word      = splitWords(doc_token)
+                doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
+                doc_remove_dup      = list(set(doc_stemmed))
+                doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
+                doc_lower           = [w.lower() for w in doc_len_check] 
                     
-                    if len(tokenizedLine) != 0:                        
-                        OUTPUT_FILE = open(OUTPUT_PATH + '/' + filename, 'w')
-                        OUTPUT_FILE.write(' '.join(tokenizedLine))
-                        OUTPUT_FILE.close()    
+                if len(doc_lower) != 0:                        
+                    OUTPUT_FILE = open(OUTPUT_PATH + '/' + filename, 'w')
+                    OUTPUT_FILE.write(' '.join(doc_lower))
+                    OUTPUT_FILE.close()    
     
 if __name__ == "__main__":
     
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-    preprocess_train(PROJECT_LIST)
+#     preprocess_train(PROJECT_LIST)
     preprocess_test(PROJECT_LIST)
     
     
