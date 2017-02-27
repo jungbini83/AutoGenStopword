@@ -111,6 +111,29 @@ def saveMongoDB():
     index2 = IndexModel([("term2", ASCENDING)])
     cooccurFreqCollection.create_indexes([index1, index2])
     
+def calcPMIMetrix(wordList1, wordList2):
+    
+    row, col = 20, 20
+    PMIMatrix = [[0 for x in range(col)] for y in range(row)]
+        
+    PMIList = list()
+    totalSumOfPMI = 0
+    for mRow in range(0, len(wordList1)):
+            
+        sumOfPMI = 0
+        for mCol in range(0, len(wordList2)):
+                
+            pmiValue = calcPMI(wordList1[mRow],wordList2[mCol])
+            sumOfPMI += pmiValue
+            
+            PMIMatrix[mRow][mCol] = pmiValue
+            PMIMatrix[mCol][mRow] = pmiValue
+        
+        totalSumOfPMI += sumOfPMI
+        PMIList.append(str(sumOfPMI))
+    
+    return totalSumOfPMI
+    
 # if __name__ == "__main__":        
-#     saveMongoDB()
-#     print calcPMI("hadoop", "org")    
+    #saveMongoDB()
+#     print calcPMI("hadoop", "hadoop") 
