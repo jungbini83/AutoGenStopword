@@ -5,6 +5,7 @@ import S3_CalcPMI
 CUR_PATH = os.getcwd()
 PREPROCESS_PATH = CUR_PATH + '/TermFrequency/'
 INPUT_PATH = CUR_PATH + '/parsedData/'
+TRAIN_PATH = INPUT_PATH + '/Commits/'
 TRAIN_NLP_PATH = INPUT_PATH + '/TrainCommits/'
 TEST_NLP_PATH = INPUT_PATH + '/TestCommits/'
 TM_OUTPUT_PATH = CUR_PATH + '/TMOutput/'
@@ -12,7 +13,7 @@ TM_OUTPUT_PATH = CUR_PATH + '/TMOutput/'
 if not os.path.exists(TM_OUTPUT_PATH):
     os.makedirs(TM_OUTPUT_PATH)
 
-def randomSelTestfile(type):
+def randomSelTestfile():
     
     os.chdir(CUR_PATH + '/mallet/bin/')  
     
@@ -27,7 +28,7 @@ def randomSelTestfile(type):
             
         # Test �뙆�씪 由ъ뒪�듃�뿉�꽌 �뙆�씪�쓣 �옖�뜡�쑝濡� 異붿텧
         testFileList = list()
-        for path, dir, files in os.walk(TRAIN_NLP_PATH):
+        for path, dir, files in os.walk(TRAIN_PATH):
             testFileList.extend([path + '/' + fileName for fileName in files])
         
         sampleDoc = random.sample(testFileList, 2000)                               # �쟾泥� 臾몄꽌�쓽 20%瑜� �꽑�깮
@@ -64,11 +65,11 @@ def makeTrainFileBoW(type, evalNum):
     print 'Train�슜 Basket of Words 留뚮뱾湲�'
     
     if type == 'Standard':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'AutoGen':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'RAKE':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/rake.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/rake.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
 #     cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     if not cmd_result == 0:
         print 'Error..\n'
@@ -201,7 +202,7 @@ if __name__ == "__main__":
         
         STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w') 
              
-#         randomSelTestfile()
+        randomSelTestfile()
         makeTestFileBoW()
         
         makeTrainFileBoW('Standard', evalNum)

@@ -119,8 +119,8 @@ def preprocess_train(PROJECT_LIST):
                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
                 doc_token           = word_tokenize(doc_letters_only)
                 doc_split_word      = splitWords(doc_token)
-                #doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
-                doc_remove_dup      = list(set(doc_split_word))
+                doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
+                doc_remove_dup      = list(set(doc_stemmed))
                 doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
                 doc_lower           = [w.lower() for w in doc_len_check]
                                                 
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-#     preprocess_train(PROJECT_LIST)
+    preprocess_train(PROJECT_LIST)
     preprocess_test(PROJECT_LIST)
     
     
