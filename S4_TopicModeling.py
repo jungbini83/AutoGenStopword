@@ -12,7 +12,7 @@ TM_OUTPUT_PATH = CUR_PATH + '/TMOutput/'
 if not os.path.exists(TM_OUTPUT_PATH):
     os.makedirs(TM_OUTPUT_PATH)
 
-def randomSelTestfile():
+def randomSelTestfile(type):
     
     os.chdir(CUR_PATH + '/mallet/bin/')  
     
@@ -67,6 +67,8 @@ def makeTrainFileBoW(type, evalNum):
         cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'AutoGen':
         cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+    elif type == 'RAKE':
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/rake.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
 #     cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     if not cmd_result == 0:
         print 'Error..\n'
@@ -192,33 +194,38 @@ if __name__ == "__main__":
     SAMPLE_NUM  = 10    
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-    for evalNum in range(6, 31):
+    for evalNum in range(1, 2):
             
         PerplexityResult = list()
         PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/AvgPerplexity(' + str(evalNum) + ').txt', 'w')
         
         STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w') 
              
-        randomSelTestfile()
+#         randomSelTestfile()
         makeTestFileBoW()
+        
         makeTrainFileBoW('Standard', evalNum)
         runTM()
-        PerplexityResult.append(str(calcPerplexity(evalNum, 0)))
+        PerplexityResult.append(str(calcPerplexity(evalNum, 'Foxlist')))
         
-        for tryIdx in range(1,31):
-            
+        makeTrainFileBoW('RAKE', evalNum)
+        runTM()
+        PerplexityResult.append(str(calcPerplexity(evalNum, 'RAKE')))
+        
+        for tryIdx in range(1,101):
+             
             candidateStopwords = calcTopicCoherence()        
             existingStopword = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'r')]        
             existingStopword.append(calcTopicCoherece2(candidateStopwords))    # �넗�뵿蹂� stopword�뿉�꽌 �떎�떆 1媛� 戮묒븘�꽌 異붽�
-               
+                
             STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w')
             STOPWORD_FILE.write('\n'.join(existingStopword))            # Extra stopword �뙆�씪�뿉 �벐湲�
             STOPWORD_FILE.flush()
             print existingStopword
-               
+                
             makeTrainFileBoW('AutoGen', evalNum)
             runTM()
-     
+      
             PerplexityResult.append(str(calcPerplexity(evalNum, tryIdx)))                  # �룊洹� perplexity 諛쏄린
-            
+#             
         PERPLEXITY_OUTPUT.write('\n'.join(PerplexityResult))       
