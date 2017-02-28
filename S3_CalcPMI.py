@@ -7,7 +7,7 @@ CUR_PATH = os.getcwd()
 PREPROCESS_PATH = CUR_PATH + '/TermFrequency/'
 INPUT_PATH = CUR_PATH + '/parsedData/'
 
-client = MongoClient('localhost', 27017)
+client = MongoClient('mongodb://localhost', 27017)
 db = client.commit_dictionary    
 
 termFreqCollection = db.TermFrequency                           # Term Frequency 저장 db collection
