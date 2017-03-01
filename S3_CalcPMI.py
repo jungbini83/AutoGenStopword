@@ -18,13 +18,14 @@ def calcPMI(keyword1, keyword2):
     t1Freq = -1
     t2Freq = -1
     
-    t1Freq = int(termFreqCollection.find_one({"term": keyword1})["freq"])
-    t2Freq = int(termFreqCollection.find_one({"term": keyword2})["freq"])
+    queryt1 = termFreqCollection.find_one({"term": keyword1})
+    queryt2 = termFreqCollection.find_one({"term": keyword2})
     
-    if not t1Freq:        
-        return 0
-    if not t2Freq:
-        return 0
+    if not queryt1:        return 0
+    if not queryt2:        return 0
+    
+    t1Freq = int(queryt1["freq"])    
+    t2Freq = int(queryt2["freq"])
     
     cooccurFreq = -1
     
@@ -134,6 +135,6 @@ def calcPMIMetrix(wordList1, wordList2):
     
     return totalSumOfPMI
     
-# if __name__ == "__main__":        
-    #saveMongoDB()
-#     print calcPMI("hadoop", "hadoop") 
+if __name__ == "__main__":        
+    saveMongoDB()
+#     print calcPMI("svn", "ffa") 
