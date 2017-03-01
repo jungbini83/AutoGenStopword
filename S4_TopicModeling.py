@@ -64,12 +64,14 @@ def makeTrainFileBoW(type, evalNum):
     print 'Train�슜 Basket of Words 留뚮뱾湲�'
     
     if type == 'Standard':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/fox_stopwords.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'RAKE':
         cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/rake_stopwords.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+    elif type == 'Poisson':
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/poisson_stopwords.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'AutoGen':
         cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
-#     cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+
     if not cmd_result == 0:
         print 'Error..\n'
             
@@ -192,10 +194,10 @@ def calcTopicCoherece2(stopwordList):
 if __name__ == "__main__":
     
     TOPIC_NUMBER = 10
-    SAMPLE_NUM  = 10    
+    SAMPLE_NUM  = 30    
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-    for evalNum in range(1, 31):
+    for evalNum in range(1, 2):
             
         PerplexityResult = list()
         PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/AvgPerplexity(' + str(evalNum) + ').txt', 'w')
@@ -204,15 +206,12 @@ if __name__ == "__main__":
              
         randomSelTestfile()
         makeTestFileBoW()
-         
-        makeTrainFileBoW('Standard', evalNum)
-        runTM()
-        PerplexityResult.append(str(calcPerplexity(evalNum, 'Foxlist')))
-         
-        makeTrainFileBoW('RAKE', evalNum)
-        runTM()
-        PerplexityResult.append(str(calcPerplexity(evalNum, 'RAKE')))
         
+        for stopwordType in ['Standard', 'RAKE', 'Poisson']:
+             makeTrainFileBoW(stopwordType, evalNum)
+             runTM()
+             PerplexityResult.append(str(calcPerplexity(evalNum, stopwordType)))
+             
         for tryIdx in range(1,101):
             
             makeTrainFileBoW('AutoGen', evalNum)
