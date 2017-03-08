@@ -8,6 +8,8 @@ PREPROCESS_PATH = CUR_PATH + '/TermFrequency/'
 INPUT_PATH = CUR_PATH + '/parsedData/'
 
 client = MongoClient('mongodb://localhost', 27017)
+# client = MongoClient('mongodb://192.168.219.103', 27017)
+# client = MongoClient('mongodb://163.152.161.97', 27017)
 db = client.commit_dictionary    
 
 termFreqCollection = db.TermFrequency                           # Term Frequency 저장 db collection
@@ -18,13 +20,14 @@ def calcPMI(keyword1, keyword2):
     t1Freq = -1
     t2Freq = -1
     
-    t1Freq = int(termFreqCollection.find_one({"term": keyword1})["freq"])
-    t2Freq = int(termFreqCollection.find_one({"term": keyword2})["freq"])
+    queryt1 = termFreqCollection.find_one({"term": keyword1})
+    queryt2 = termFreqCollection.find_one({"term": keyword2})
     
-    if not t1Freq:        
-        return 0
-    if not t2Freq:
-        return 0
+    if not queryt1:        return 0
+    if not queryt2:        return 0
+    
+    t1Freq = int(queryt1["freq"])    
+    t2Freq = int(queryt2["freq"])
     
     cooccurFreq = -1
     
@@ -134,6 +137,6 @@ def calcPMIMetrix(wordList1, wordList2):
     
     return totalSumOfPMI
     
-# if __name__ == "__main__":        
-    #saveMongoDB()
-#     print calcPMI("hadoop", "hadoop") 
+if __name__ == "__main__":        
+    saveMongoDB()
+    print calcPMI("svn", "ffa") 

@@ -4,7 +4,7 @@ from collections import Counter
 from nltk.corpus import stopwords
 from collections import defaultdict
 from nltk import word_tokenize
-from porter2stemmer import Porter2Stemmer
+# from porter2stemmer import Porter2Stemmer
 
 CUR_PATH = os.getcwd()
 INPUT_PATH = CUR_PATH + '/parsedData/'
@@ -13,18 +13,29 @@ TEST_COMMIT_PATH = INPUT_PATH + 'Commits/test/'
 TRAIN_NLP_PATH = INPUT_PATH + 'TrainCommits/'
 TEST_NLP_PATH = INPUT_PATH + 'TestCommits/'
 
-stopwordList = stopwords.words('english') + list(string.punctuation) + ['_', '', ',']   # stopword 리스트로 만들기
+# stemmer = Porter2Stemmer()
 
-regex_str = [r'<[^>]+',
-             r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+',
-             r'(?:(?:\d+,?)+(?:\.?\d+)?)',
-             r"(?:[a-z][a-z'\-_]+[a-z])",
-             r'(?:[\w_]+)',
-             r'(?:\S)']
+def is_number(s):
+    try:
+        float(s) if '.' in s else int(s)
+        return True
+    except ValueError:
+        return False
 
-tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
-
-stemmer = Porter2Stemmer()
+def separate_words(text, min_word_return_size):
+    """
+    Utility function to return a list of all words that are have a length greater than a specified number of characters.
+    @param text The text that must be split in to words.
+    @param min_word_return_size The minimum no of characters a word must have to be included.
+    """
+    splitter = re.compile('[^a-zA-Z0-9_\\+]')
+    words = []
+    for single_word in splitter.split(text):
+        current_word = single_word.strip().lower()
+        #leave numbers in phrase, but don't count as words, since they tend to invalidate scores of their phrases
+        if len(current_word) > min_word_return_size and current_word != '' and not is_number(current_word):
+            words.append(current_word)
+    return words
 
 def splitWords(WordList):
     
@@ -116,13 +127,14 @@ def preprocess_train(PROJECT_LIST):
                 
                 # 자연어 전처리 과정
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-                doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
-                doc_token           = word_tokenize(doc_letters_only)
-                doc_split_word      = splitWords(doc_token)
-                doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
-                doc_remove_dup      = list(set(doc_stemmed))
-                doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
-                doc_lower           = [w.lower() for w in doc_len_check]
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+#                 doc_token           = word_tokenize(doc_letters_only)
+#                 doc_split_word      = splitWords(doc_token)
+#                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
+#                 doc_remove_dup      = list(set(doc_stemmed))
+#                 doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
+                doc_token           = separate_words(doc_raw, 2)
+                doc_lower           = [w.lower() for w in doc_token]
                                                 
                 if len(doc_lower) != 0:
                     
@@ -171,13 +183,14 @@ def preprocess_test(PROJECT_LIST):
                 tokenizedLine = list()
                 # 자연어 전처리 과정
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-                doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
-                doc_token           = word_tokenize(doc_letters_only)
-                doc_split_word      = splitWords(doc_token)
-                doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
-                doc_remove_dup      = list(set(doc_stemmed))
-                doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
-                doc_lower           = [w.lower() for w in doc_len_check] 
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+#                 doc_token           = word_tokenize(doc_letters_only)
+#                 doc_split_word      = splitWords(doc_token)
+#                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
+#                 doc_remove_dup      = list(set(doc_stemmed))
+#                 doc_len_check       = [w for w in doc_remove_dup if len(w) > 2]
+                doc_token           = separate_words(doc_raw, 2)
+                doc_lower           = [w.lower() for w in doc_token] 
                     
                 if len(doc_lower) != 0:                        
                     OUTPUT_FILE = open(OUTPUT_PATH + '/' + filename, 'w')
@@ -189,6 +202,6 @@ if __name__ == "__main__":
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
     preprocess_train(PROJECT_LIST)
-    preprocess_test(PROJECT_LIST)
+#     preprocess_test(PROJECT_LIST)
     
     
