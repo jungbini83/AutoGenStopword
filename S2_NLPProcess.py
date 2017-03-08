@@ -98,42 +98,6 @@ def printMostCoOccurence(matrix, n):
     terms_max = sorted(com_max, key=operator.itemgetter(1), reverse=True)
     print terms_max[:n]
         
-def calcuateDocFrequency():
-    
-    FOX_OUTPUT_FILE = open(CUR_PATH + '/TermFrequency/DocFreq(fox).txt', 'w')
-    ALL_OUTPUT_FILE=  open(CUR_PATH + '/TermFrequency/DocFreq(all).txt', 'w')
-    
-    FOX_STOPWORD_LIST = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/fox_stopwords.txt', 'r')]
-            
-    docList = [line for line in open(TRAIN_NLP_PATH + '/commits(train).txt', 'r')]
-    
-    # Fox stop words 안에 있는 term만 doc freq 저장
-    termList_fox = list()    
-    for document in docList:
-        token = document.split()
-        
-        tmpDict = {}
-        for term in token:
-            if term in FOX_STOPWORD_LIST:
-                tmpDict.setdefault(term, 0)
-                tmpDict[term] += 1
-        
-        termList_fox.append(tmpDict)
-    
-    docFreq_fox = Counter()
-    map(docFreq_fox.update, (termFreq.keys() for termFreq in termList_fox))
-    
-    for termName, count in docFreq_fox.items():
-        FOX_OUTPUT_FILE.write(termName + '|' + str(count) + '\n')
-        
-    # 모든 training set 의 term의 doc freq 저장
-    termList_all = [Counter(doc.split()) for doc in docList]
-    
-    docFreq_all = Counter()
-    map(docFreq_all.update, (termFreq.keys() for termFreq in termList_all))
-    
-    for termName, count in docFreq_all.items():
-        ALL_OUTPUT_FILE.write(termName + '|' + str(count) + '\n')
 
 def preprocess_train(PROJECT_LIST):
             
@@ -237,8 +201,7 @@ if __name__ == "__main__":
     
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-#     preprocess_train(PROJECT_LIST)
+    preprocess_train(PROJECT_LIST)
 #     preprocess_test(PROJECT_LIST)
-    calcuateDocFrequency()
     
     
