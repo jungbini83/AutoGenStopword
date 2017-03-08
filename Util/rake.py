@@ -42,7 +42,7 @@ def separate_words(text, min_word_return_size):
     @param text The text that must be split in to words.
     @param min_word_return_size The minimum no of characters a word must have to be included.
     """
-    splitter = re.compile('[^a-zA-Z0-9_\\+\\-/]')
+    splitter = re.compile('[^a-zA-Z0-9_\\+]')
     words = []
     for single_word in splitter.split(text):
         current_word = single_word.strip().lower()
@@ -157,62 +157,62 @@ def calcuate_rake(filePath):
     word_frequency = {}
     kfDict = {}
     afDict= {}
-    for line in open(filePath, 'r'):
+    for path, dir, files in os.walk(filePath):
+        for filename in files:
+            
+            for line in open(path + '/' + filename, 'r'):
                     
-        sentenceList = split_sentences(line)            
-        
-        stoppath = "emptyStoplist.txt"  
-        stopwordpattern = build_stop_word_regex(stoppath)
-        phraseList = generate_candidate_keywords(sentenceList, stopwordpattern)
-        
-        # 각 단어 점수 계산
-        wordscores = calculate_word_scores(phraseList)
-
-        # 후보 키워드 점수 합산
-        keywordcandidates = generate_candidate_keyword_scores(phraseList, wordscores)
-        
-        # 키워드 정렬
-        sortedKeywords = sorted(keywordcandidates.iteritems(), key=operator.itemgetter(1), reverse=True)
-        totalKeywords = len(sortedKeywords)
-        
-        keywordList = [keywordItem[0] for keywordItem in sortedKeywords[0:(totalKeywords / 3)]]
-        
-        for phrase in phraseList:        
-            word_list = separate_words(phrase, 0)        
-            for word in word_list:
-                word_frequency.setdefault(word, 0)
-                word_frequency[word] += 1
+                sentenceList = split_sentences(line)            
                 
-                if keywordList:
-                    if word in keywordList:                                # 1/3 keyword 안에 있다면, 키워드 단어로 간주하고 kf 증가
-                        kfDict.setdefault(word, 0)
-                        kfDict[word] += 1                            
-                    else:
-                                         
+                stoppath = "emptyStoplist.txt"  
+                stopwordpattern = build_stop_word_regex(stoppath)
+                phraseList = generate_candidate_keywords(sentenceList, stopwordpattern)
+                
+                # 각 단어 점수 계산
+                wordscores = calculate_word_scores(phraseList)
+        
+                # 후보 키워드 점수 합산
+                keywordcandidates = generate_candidate_keyword_scores(phraseList, wordscores)
+                
+                # 키워드 정렬
+                sortedKeywords = sorted(keywordcandidates.iteritems(), key=operator.itemgetter(1), reverse=True)
+                totalKeywords = len(sortedKeywords)
+                
+                keywordList = [keywordItem[0] for keywordItem in sortedKeywords[0:(totalKeywords / 3)]]
+                
+                for phrase in phraseList:        
+                    word_list = separate_words(phrase, 0)        
+                    for word in word_list:
+                        word_frequency.setdefault(word, 0)
+                        word_frequency[word] += 1
+                        
                         for keyword in keywordList:
                             
-                            keywordIdx = phraseList.index(keyword)           # raw text에서 키워드 위치 알아내기
-                            
-                            if 0 < keywordIdx or keywordIdx < len(phraseList)-1:
-
+                            if word in keyword:                                      # 1/3 keyword 안에 있다면, 키워드 단어로 간주하고 kf 증가
+                                kfDict.setdefault(word, 0)
+                                kfDict[word] += 1                            
+                            else:                                    
+                                keywordIdx = phraseList.index(keyword)           # raw text에서 키워드 위치 알아내기
                                 
-                                if 0 < keywordIdx:
-                                    leftPhrase = phraseList[keywordIdx-1]                                    
-                                    left_word_list = separate_words(leftPhrase, 0)
+                                if 0 < keywordIdx or keywordIdx < len(phraseList)-1:
                                     
-                                    if left_word_list:
-                                        if word == left_word_list[-1]:
-                                            afDict.setdefault(word, 0)                  # 키워드 앞 뒤 단어가 해당 word라면 인접 단어로 간주하고 af 증가
-                                            afDict[word] += 1
-                                    
-                                if keywordIdx < len(phraseList) - 1: 
-                                    rightPhrase = phraseList[keywordIdx+1]                                        
-                                    right_word_list = separate_words(rightPhrase, 0)
-                                    
-                                    if right_word_list:                                        
-                                        if word == right_word_list[0]:
-                                            afDict.setdefault(word, 0)                  # 키워드 앞 뒤 단어가 해당 word라면 인접 단어로 간주하고 af 증가
-                                            afDict[word] += 1
+                                    if 0 < keywordIdx:
+                                        leftPhrase = phraseList[keywordIdx-1]                                    
+                                        left_word_list = separate_words(leftPhrase, 0)
+                                        
+                                        if left_word_list:
+                                            if word == left_word_list[-1]:
+                                                afDict.setdefault(word, 0)                  # 키워드 앞 뒤 단어가 해당 word라면 인접 단어로 간주하고 af 증가
+                                                afDict[word] += 1
+                                        
+                                    if keywordIdx < len(phraseList) - 1: 
+                                        rightPhrase = phraseList[keywordIdx+1]                                        
+                                        right_word_list = separate_words(rightPhrase, 0)
+                                        
+                                        if right_word_list:                                        
+                                            if word == right_word_list[0]:
+                                                afDict.setdefault(word, 0)                  # 키워드 앞 뒤 단어가 해당 word라면 인접 단어로 간주하고 af 증가
+                                                afDict[word] += 1
                                                     
     sorted_tf = OrderedDict(sorted(word_frequency.items(), key=lambda x: x[1], reverse=True))
                     
@@ -258,4 +258,5 @@ if test:
     keywords = rake.run(text)
     print keywords
     
-calcuate_rake("C:/Users/jungbini/git/AutoGenStopword/parsedData/TrainCommits/commits(train).txt")
+CUR_PATH = os.getcwd()
+calcuate_rake(CUR_PATH + "\../parsedData/Commits/train/")
