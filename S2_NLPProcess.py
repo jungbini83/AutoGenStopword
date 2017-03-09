@@ -4,7 +4,7 @@ from collections import Counter
 from nltk.corpus import stopwords
 from collections import defaultdict
 from nltk import word_tokenize
-# from porter2stemmer import Porter2Stemmer
+
 
 CUR_PATH = os.getcwd()
 INPUT_PATH = CUR_PATH + '/parsedData/'
@@ -41,7 +41,7 @@ def splitWords(WordList):
     
     newWordList = []
     for wordItem in WordList:
-        tmpList1 = re.findall('[A-Z]*[a-z]+', wordItem)                 # �빮�ڷ� �����ϴ� �ռ��� (e.g. Ŭ���� ��)        
+        tmpList1 = re.findall('[A-Z]*[a-z]+', wordItem)                 # 占쎈문占쌘뤄옙 占쏙옙占쏙옙占싹댐옙 占쌌쇽옙占쏙옙 (e.g. 클占쏙옙占쏙옙 占쏙옙)        
         if tmpList1:
             newWordList += tmpList1
         else:
@@ -97,17 +97,33 @@ def printMostCoOccurence(matrix, n):
         
     terms_max = sorted(com_max, key=operator.itemgetter(1), reverse=True)
     print terms_max[:n]
-        
+    
+def countDF():
+    
+    OUTPUT_FILE = open(CUR_PATH + '/TermFrequency/DocFreq.txt', 'w')
+
+    #using a list to simulate document store which stores documents
+    documents = [doc for doc in open(TRAIN_NLP_PATH + '/commits(train).txt', 'r')]
+    
+    #calculate words frequencies per document
+    word_frequencies = [Counter(document.split()) for document in documents]
+    
+    #calculate document frequency
+    document_frequencies = Counter()
+    map(document_frequencies.update, (word_frequency.keys() for word_frequency in word_frequencies))
+    
+    for word, freq  in document_frequencies.items():
+        OUTPUT_FILE.write(word + ',' + str(freq) + '\n')        
 
 def preprocess_train(PROJECT_LIST):
             
-    count_all = Counter()                                                   # 단어 빈도수 계산을 위한 클래
-    co_occur_matrix = defaultdict(lambda: defaultdict(int))                 # 동시 발생 갯수를 저장할 메트릭스
+    count_all = Counter()                                                   # �떒�뼱 鍮덈룄�닔 怨꾩궛�쓣 �쐞�븳 �겢�옒
+    co_occur_matrix = defaultdict(lambda: defaultdict(int))                 # �룞�떆 諛쒖깮 媛��닔瑜� ���옣�븷 硫뷀듃由��뒪
     
     if not os.path.exists(TRAIN_NLP_PATH):
         os.makedirs(TRAIN_NLP_PATH)
     
-    TRAIN_ALL_FILE = open(TRAIN_NLP_PATH + '/commits(train).txt', 'w')                # 모든 프로젝트의 commit 메시지를 저장
+    TRAIN_ALL_FILE = open(TRAIN_NLP_PATH + '/commits(train).txt', 'w')                # 紐⑤뱺 �봽濡쒖젥�듃�쓽 commit 硫붿떆吏�瑜� ���옣
     
     total_doc_num = 0
     for program in PROJECT_LIST:
@@ -125,9 +141,9 @@ def preprocess_train(PROJECT_LIST):
             
             for filename in files:
                 
-                # 자연어 전처리 과정
+                # �옄�뿰�뼱 �쟾泥섎━ 怨쇱젙
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # �븣�뙆踰노쭔 媛��졇�삤湲�
 #                 doc_token           = word_tokenize(doc_letters_only)
 #                 doc_split_word      = splitWords(doc_token)
 #                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
@@ -159,9 +175,9 @@ def preprocess_train(PROJECT_LIST):
         print 'The number of doc of ' + program + ' is ' + str(total_program_doc_num)
         total_doc_num += total_program_doc_num 
         
-    writeTermFrequency(count_all)                                   # 전체 단어 빈도수 저장하기
-    writeCoOccurenceFreq(co_occur_matrix)                           # 동시 발생 단어 빈도수 저장하기
-    writeTotalDocNum(total_doc_num)                                 # 전체 커밋 문서(doc)의 갯수를 저장
+    writeTermFrequency(count_all)                                   # �쟾泥� �떒�뼱 鍮덈룄�닔 ���옣�븯湲�
+    writeCoOccurenceFreq(co_occur_matrix)                           # �룞�떆 諛쒖깮 �떒�뼱 鍮덈룄�닔 ���옣�븯湲�
+    writeTotalDocNum(total_doc_num)                                 # �쟾泥� 而ㅻ컠 臾몄꽌(doc)�쓽 媛��닔瑜� ���옣
     
 def preprocess_test(PROJECT_LIST):
     
@@ -181,9 +197,9 @@ def preprocess_test(PROJECT_LIST):
             for filename in files:
                 
                 tokenizedLine = list()
-                # 자연어 전처리 과정
+                # �옄�뿰�뼱 �쟾泥섎━ 怨쇱젙
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # 알파벳만 가져오기
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # �븣�뙆踰노쭔 媛��졇�삤湲�
 #                 doc_token           = word_tokenize(doc_letters_only)
 #                 doc_split_word      = splitWords(doc_token)
 #                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
@@ -201,7 +217,7 @@ if __name__ == "__main__":
     
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-    preprocess_train(PROJECT_LIST)
+#     preprocess_train(PROJECT_LIST)
 #     preprocess_test(PROJECT_LIST)
-    
+    countDF()
     
