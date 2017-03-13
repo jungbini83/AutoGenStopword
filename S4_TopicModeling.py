@@ -233,17 +233,19 @@ def AutoGenStopwords():
 def FindOptimalNumber(approach):
     
     if approach == 'Foxlist':
-        SW_LIST = [stopword for stopword in open(CUR_PATH + '/mallet/stoplists/fox_stopwords.txt', 'r')]
+        SW_LIST = [stopword.strip() for stopword in open(CUR_PATH + '/mallet/stoplists/fox_stopwords.txt', 'r')]
         
     PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/Perplexity(' + approach + ').txt', 'w')
     for SWIdx in range(0, 426):
         SW_FILE = open(CUR_PATH + '/mallet/stoplists/tmpList.txt', 'w')
         SW_FILE.write('\n'.join(SW_LIST[0:SWIdx]))
+        SW_FILE.flush()
         
         makeTrainFileBoW('Test', 1)
         runTM('Foxlist')
         
         PERPLEXITY_OUTPUT.write(str(calcPerplexity(1, approach)))
+        PERPLEXITY_OUTPUT.flush()
 
 def TM4Evaluation():
     
