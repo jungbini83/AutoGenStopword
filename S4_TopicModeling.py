@@ -46,7 +46,7 @@ def randomSelTestfile():
             
     os.chdir('..')
 
-def makeTestFileBoW():
+def makeInternalFileBoW():
     
     os.chdir(CUR_PATH + '/mallet/bin/')
 
@@ -58,6 +58,19 @@ def makeTestFileBoW():
         cmd_result = os.system('mallet import-dir --input ' + SAMPLE_DOC_PATH + ' --keep-sequence --output ' + TM_OUTPUT_PATH + '/test_corpus(' + str(tryIdx) + ').mallet')
         if not cmd_result == 0:
             print 'Error..\n'
+            
+    os.chdir('..')
+    
+def makeExternalFileBoW():
+    
+    os.chdir(CUR_PATH + '/mallet/bin/')
+    
+    EXTERNAL_DOC_PATH = CUR_PATH + '/parsedData/TestCommits'
+    
+    print 'making External data set to BoW...'
+    cmd_result = os.system('mallet import-dir --input ' + EXTERNAL_DOC_PATH + ' --keep-sequence --output ' + TM_OUTPUT_PATH + '/external_corpus.mallet')
+    if not cmd_result == 0:
+        print 'Error..\n'
             
     os.chdir('..')
 
@@ -77,10 +90,7 @@ def makeTrainFileBoW(type, evalNum):
     elif type == 'AutoGen':
         cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra(' + str(evalNum) + ').txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
     elif type == 'AutoGenFix':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')    
-    elif type == 'Test':
-        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/tmpList.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
-#     cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --remove-stopwords --stoplist-file ../stoplists/TopClass_extra.txt --keep-sequence --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')
+        cmd_result = os.system('mallet import-file --input ' + TRAIN_NLP_PATH + 'commits(train).txt --keep-sequence --stoplist-file ../stoplists/TopClass_extra.txt --output ' + TM_OUTPUT_PATH + '/train_corpus.mallet')  
     
     if not cmd_result == 0:
         print 'Error..\n'
@@ -88,23 +98,14 @@ def makeTrainFileBoW(type, evalNum):
     os.chdir('..')
     
 # Topic Modeling 占쎈즼�뵳�덈┛
-def runTM(tryIdx):
+def runTM4Internal(tryIdx):
     
     os.chdir(CUR_PATH + '/mallet/bin')  
     
-    # 1. Train File 筌뤴뫀�쑞筌랃옙
-    cmd_result = os.system('mallet train-topics --input ' + TM_OUTPUT_PATH + 'train_corpus.mallet --num-topics ' + str(TOPIC_NUMBER) +
-                             ' --evaluator-filename ' + TM_OUTPUT_PATH + 'evaluator' 
-                             ' --output-topic-keys ' + TM_OUTPUT_PATH + 'AssociatedWords(' + str(tryIdx) + '-' + str(TOPIC_NUMBER) + ').csv' + 
-                             ' --output-doc-topics ' + TM_OUTPUT_PATH + 'TopicContribution(' + str(TOPIC_NUMBER) + ').csv' +
-                             ' --num-iterations 300 --show-topics-interval 1000 ' +
-                             ' --num-threads 16')
-      
-    if not cmd_result == 0:
-        print 'Train topic model 占쎈퓠占쎌쑎 獄쏆뮇源�\n'
-        exit()
-    
-    # 2. 占쎄묘占쎈탣 Test File 筌뤴뫀�쑞筌랃옙
+    # 1. Making Train corpus to Topic Model
+    makeTrainTM(tryIdx)    
+
+    # 2. Making Internal data set corpus to Topic Model
     for sampleIdx in range(1, SAMPLE_NUM+1):
                 
         cmd_result = os.system('mallet evaluate-topics --evaluator ' + TM_OUTPUT_PATH + 'evaluator' 
@@ -122,7 +123,45 @@ def runTM(tryIdx):
         
     os.chdir('../..')
     
-def calcPerplexity(evalNum, tryNum): 
+def runTM4External(tryIdx):
+    
+    os.chdir(CUR_PATH + '/mallet/bin')  
+    
+    # 1. Making Train corpus to Topic Model
+    makeTrainTM(tryIdx)
+    
+    # 2. Making External textual corpus to Topic Model
+    cmd_result = os.system('mallet evaluate-topics --evaluator ' + TM_OUTPUT_PATH + 'evaluator' 
+                               ' --input ' + TM_OUTPUT_PATH + 'external_corpus.mallet' + 
+                               ' --output-doc-probs ' + TM_OUTPUT_PATH + 'external_docprobs.txt')
+        
+    if not cmd_result == 0:
+        print 'External test topic model error...'
+        exit()
+                   
+    # 3. Document length calculation...
+    cmd_result = os.system('mallet run cc.mallet.util.DocumentLengths' +
+                           ' --input ' + TM_OUTPUT_PATH + 'external_corpus.mallet' +
+                           ' > ' + TM_OUTPUT_PATH + 'external_doclengths.txt')
+    
+def makeTrainTM(tryIdx):
+    
+    os.chdir(CUR_PATH + '/mallet/bin')  
+    
+    # Making Train File to Topic Model
+    cmd_result = os.system('mallet train-topics --input ' + TM_OUTPUT_PATH + 'train_corpus.mallet --num-topics ' + str(TOPIC_NUMBER) +
+                             ' --evaluator-filename ' + TM_OUTPUT_PATH + 'evaluator' 
+                             ' --output-topic-keys ' + TM_OUTPUT_PATH + 'AssociatedWords(' + str(tryIdx) + '-' + str(TOPIC_NUMBER) + ').csv' + 
+                             ' --output-doc-topics ' + TM_OUTPUT_PATH + 'TopicContribution(' + str(TOPIC_NUMBER) + ').csv' +
+                             ' --num-iterations 300 --show-topics-interval 1000 ' +
+                             ' --num-threads 16')
+      
+    if not cmd_result == 0:
+        print 'Train topic model 占쎈퓠占쎌쑎 獄쏆뮇源�\n'
+        exit()
+    
+    
+def calcPerplexity4Internal(evalNum, tryNum): 
     
     OUTPUT_FILE = open(TM_OUTPUT_PATH + 'perplexity(' + str(evalNum) + '-' + str(tryNum) + ').txt', 'w')
         
@@ -144,6 +183,23 @@ def calcPerplexity(evalNum, tryNum):
     
     return sumOfPerplexity/SAMPLE_NUM
             
+def calcPerplexity4External(approach): 
+    
+    OUTPUT_FILE = open(TM_OUTPUT_PATH + 'external_perplexity(' + approach + ').txt', 'w')
+        
+    # 占쎄묘占쎈탣 test file占쎌벥 Perplexity �④쑴沅�
+    logLikelihood   = [float(ll) for ll in open(TM_OUTPUT_PATH + 'external_docprobs.txt')]
+    docLength       = [int(length) for length in open(TM_OUTPUT_PATH + 'external_doclengths.txt')] 
+    
+    sumOfLL     = sum(logLikelihood)
+    sumOfDocLen = sum(docLength)
+    perplexity  = math.exp(-sumOfLL / sumOfDocLen)
+        
+    OUTPUT_FILE.write(str(perplexity) + '\n')
+    OUTPUT_FILE.flush()
+    
+    return perplexity            
+
 def calcTopicCoherence(tryIdx):
    
     row, col = TOPIC_NUMBER, TOPIC_NUMBER
@@ -211,13 +267,13 @@ def AutoGenStopwords():
         STOPWORD_FILE = open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'w') 
               
         randomSelTestfile()
-        makeTestFileBoW()
+        makeInternalFileBoW()
          
         for tryIdx in range(1,422):
              
             makeTrainFileBoW('AutoGen', evalNum)
-            runTM(tryIdx)
-            PerplexityResult.append(str(calcPerplexity(evalNum, tryIdx)))                  # 占쎈즸域뱄옙 perplexity 獄쏆룄由�
+            runTM4Internal(tryIdx)
+            PerplexityResult.append(str(calcPerplexity4Internal(evalNum, tryIdx)))                  # 占쎈즸域뱄옙 perplexity 獄쏆룄由�
               
             candidateStopwords = calcTopicCoherence(tryIdx)        
             existingStopword = [line.strip() for line in open(CUR_PATH + '/mallet/stoplists/TopClass_extra(' + str(evalNum) + ').txt', 'r')]        
@@ -230,39 +286,31 @@ def AutoGenStopwords():
  
         PERPLEXITY_OUTPUT.write('\n'.join(PerplexityResult))   
      
-def FindOptimalNumber(approach):
+def TM4Evaluation(dataType):
     
-    if approach == 'Foxlist':
-        SW_LIST = [stopword.strip() for stopword in open(CUR_PATH + '/mallet/stoplists/fox_stopwords.txt', 'r')]
-        
-    PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/Perplexity(' + approach + ').txt', 'w')
-    for SWIdx in range(0, 426):
-        SW_FILE = open(CUR_PATH + '/mallet/stoplists/tmpList.txt', 'w')
-        SW_FILE.write('\n'.join(SW_LIST[0:SWIdx]))
-        SW_FILE.flush()
-        
-        makeTrainFileBoW('Test', 1)
-        runTM('Foxlist')
-        
-        PERPLEXITY_OUTPUT.write(str(calcPerplexity(1, approach)))
-        PERPLEXITY_OUTPUT.flush()
-
-def TM4Evaluation():
-    
-    randomSelTestfile()
-    makeTestFileBoW()
+    if dataType == 'Internal':
+        randomSelTestfile()
+        makeInternalFileBoW()
+    else:
+        makeExternalFileBoW()
                 
-    for approach in ['Poisson']:
+    for approach in ['Foxlist', 'Poisson', 'RAKE', 'AutoGenFix']:
 
         PERPLEXITY_OUTPUT = open(TM_OUTPUT_PATH + '/Perplexity(' + approach + ').txt', 'w')
-                        
         makeTrainFileBoW(approach, 1)
-        runTM(approach)
         
-        PERPLEXITY_OUTPUT.write(str(calcPerplexity(1, approach)))
+        if dataType == 'Internal':                      
+            runTM4Internal(approach)
+            PERPLEXITY_OUTPUT.write(str(calcPerplexity4Internal(1, approach)))
+        else:   
+            for tryIdx in range(1,31):                   
+                runTM4External(approach)            
+                PERPLEXITY_OUTPUT.write(str(calcPerplexity4External(approach)) + '\n')
+                PERPLEXITY_OUTPUT.flush()
             
 if __name__ == "__main__":
     
 #     AutoGenStopwords()
-#     TM4Evaluation()
-    FindOptimalNumber('Foxlist')
+#     TM4Evaluation('Internal')
+    TM4Evaluation('External')
+
