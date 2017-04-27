@@ -196,7 +196,6 @@ def preprocess_test(PROJECT_LIST):
             for filename in files:
                 
                 tokenizedLine = list()
-                # �옄�뿰�뼱 �쟾泥섎━ 怨쇱젙
                 doc_raw             = open(path + '/' + filename, 'r').read()                
 #                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             
 #                 doc_token           = word_tokenize(doc_letters_only)
