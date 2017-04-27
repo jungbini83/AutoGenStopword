@@ -344,8 +344,8 @@ def TM4Evaluation(dataType):
 if __name__ == "__main__":
     
     AutoGenStopwords('Internal', STOPWORD_NUM)
-    #AutoGenStopwords('External', STOPWORD_NUM)
+    AutoGenStopwords('External', STOPWORD_NUM)
 
-#    TM4Evaluation('Internal')
-#    TM4Evaluation('External')
+    TM4Evaluation('Internal')
+    TM4Evaluation('External')
 
