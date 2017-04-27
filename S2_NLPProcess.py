@@ -41,7 +41,7 @@ def splitWords(WordList):
     
     newWordList = []
     for wordItem in WordList:
-        tmpList1 = re.findall('[A-Z]*[a-z]+', wordItem)                 # 占쎈문占쌘뤄옙 占쏙옙占쏙옙占싹댐옙 占쌌쇽옙占쏙옙 (e.g. 클占쏙옙占쏙옙 占쏙옙)        
+        tmpList1 = re.findall('[A-Z]*[a-z]+', wordItem)                 
         if tmpList1:
             newWordList += tmpList1
         else:
@@ -117,13 +117,13 @@ def countDF():
 
 def preprocess_train(PROJECT_LIST):
             
-    count_all = Counter()                                                   # �떒�뼱 鍮덈룄�닔 怨꾩궛�쓣 �쐞�븳 �겢�옒
-    co_occur_matrix = defaultdict(lambda: defaultdict(int))                 # �룞�떆 諛쒖깮 媛��닔瑜� ���옣�븷 硫뷀듃由��뒪
+    count_all = Counter()                                                   
+    co_occur_matrix = defaultdict(lambda: defaultdict(int))                 
     
     if not os.path.exists(TRAIN_NLP_PATH):
         os.makedirs(TRAIN_NLP_PATH)
     
-    TRAIN_ALL_FILE = open(TRAIN_NLP_PATH + '/commits(train).txt', 'w')                # 紐⑤뱺 �봽濡쒖젥�듃�쓽 commit 硫붿떆吏�瑜� ���옣
+    TRAIN_ALL_FILE = open(TRAIN_NLP_PATH + '/commits(train).txt', 'w')                
     
     total_doc_num = 0
     for program in PROJECT_LIST:
@@ -141,9 +141,8 @@ def preprocess_train(PROJECT_LIST):
             
             for filename in files:
                 
-                # �옄�뿰�뼱 �쟾泥섎━ 怨쇱젙
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # �븣�뙆踰노쭔 媛��졇�삤湲�
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             
 #                 doc_token           = word_tokenize(doc_letters_only)
 #                 doc_split_word      = splitWords(doc_token)
 #                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
@@ -175,9 +174,9 @@ def preprocess_train(PROJECT_LIST):
         print 'The number of doc of ' + program + ' is ' + str(total_program_doc_num)
         total_doc_num += total_program_doc_num 
         
-    writeTermFrequency(count_all)                                   # �쟾泥� �떒�뼱 鍮덈룄�닔 ���옣�븯湲�
-    writeCoOccurenceFreq(co_occur_matrix)                           # �룞�떆 諛쒖깮 �떒�뼱 鍮덈룄�닔 ���옣�븯湲�
-    writeTotalDocNum(total_doc_num)                                 # �쟾泥� 而ㅻ컠 臾몄꽌(doc)�쓽 媛��닔瑜� ���옣
+    writeTermFrequency(count_all)                                   
+    writeCoOccurenceFreq(co_occur_matrix)                           
+    writeTotalDocNum(total_doc_num)                                 
     
 def preprocess_test(PROJECT_LIST):
     
@@ -199,7 +198,7 @@ def preprocess_test(PROJECT_LIST):
                 tokenizedLine = list()
                 # �옄�뿰�뼱 �쟾泥섎━ 怨쇱젙
                 doc_raw             = open(path + '/' + filename, 'r').read()                
-#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             # �븣�뙆踰노쭔 媛��졇�삤湲�
+#                 doc_letters_only    = re.sub('[^a-zA-Z]', ' ', doc_raw)             
 #                 doc_token           = word_tokenize(doc_letters_only)
 #                 doc_split_word      = splitWords(doc_token)
 #                 doc_stemmed         = [stemmer.stem(w) for w in doc_split_word]
@@ -217,7 +216,7 @@ if __name__ == "__main__":
     
     PROJECT_LIST = ['kotlin','gradle','orientdb','PDE','Actor','hadoop','Graylog','cassandra','CoreNLP','netty','druid','alluxio']
     
-#     preprocess_train(PROJECT_LIST)
-#     preprocess_test(PROJECT_LIST)
+    preprocess_train(PROJECT_LIST)
+    preprocess_test(PROJECT_LIST)
     countDF()
     
